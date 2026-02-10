@@ -58,21 +58,30 @@ if ($result_loc->num_rows > 0) {
 // 3. Proses Upload Foto
 if (isset($_FILES['photo']['name'])) {
     $target_dir = "../uploads/attendance/";
+    
+    // --- TAMBAHAN: Cek & Buat Folder Otomatis ---
+    if (!file_exists($target_dir)) {
+        mkdir($target_dir, 0777, true); // Buat folder jika belum ada
+    }
+    // --------------------------------------------
+
     // Nama file unik: USERID_TIPE_TIMESTAMP.jpg
     $filename = $user_id . "_" . $type . "_" . time() . ".jpg";
     $target_file = $target_dir . $filename;
 
     if (move_uploaded_file($_FILES["photo"]["tmp_name"], $target_file)) {
+        // Simpan path relatif untuk database
         $photo_url = "uploads/attendance/" . $filename;
     } else {
-        echo json_encode(['success' => false, 'message' => 'Gagal upload foto']);
+        // Tampilkan error spesifik php (opsional untuk debug)
+        $error = error_get_last();
+        echo json_encode(['success' => false, 'message' => 'Gagal upload foto. Cek permission folder. ' . $error['message']]);
         exit();
     }
 } else {
     echo json_encode(['success' => false, 'message' => 'Foto wajib disertakan']);
     exit();
 }
-
 // 4. Simpan ke Database
 // --- LOGIKA CEK TERLAMBAT ---
 $status = 'ontime';
